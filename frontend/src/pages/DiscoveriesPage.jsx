@@ -1,67 +1,96 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Search, Calendar, ArrowRight } from 'lucide-react';
 import axios from 'axios';
+const fetchDiscoveriesData = async () => {
+    try {
+        // First try to fetch recent space discoveries
+        const newsResponse = await axios.get('https://api.spaceflightnewsapi.net/v4/articles', {
+            params: {
+                limit: 15,
+                offset: 0,
+                has_launch: false, // Exclude pure launch news
+                contains_tags: 'science,discovery,research'
+            }
+        });
+
+        if (!newsResponse.data.results) {
+            throw new Error('No data received from API');
+        }
+
+        const formattedDiscoveries = newsResponse.data.results
+            .filter(article => 
+                article.title && article.summary && article.image_url && 
+                !article.title.toLowerCase().includes('launch') // Further filter out launch-related news
+            )
+            .map(article => ({
+                id: article.id,
+                title: article.title,
+                date: article.published_at,
+                category: determineCategory(article.title + ' ' + article.summary),
+                image: article.image_url,
+                description: article.summary,
+                significance: generateSignificance(article.summary),
+                url: article.url
+            }));
+
+        return formattedDiscoveries;
+    } catch (error) {
+        console.error('Error fetching discoveries:', error);
+        throw new Error('Failed to fetch space discoveries data');
+    }
+};
+
+const determineCategory = (text) => {
+    text = text.toLowerCase();
+    if (text.includes('mars') || text.includes('moon') || text.includes('venus') || text.includes('jupiter') || text.includes('saturn')) return 'Planetary';
+    if (text.includes('exoplanet') || text.includes('planet')) return 'Exoplanets';
+    if (text.includes('star') || text.includes('galaxy') || text.includes('black hole') || text.includes('nebula')) return 'Deep Space';
+    return 'Astronomy';
+};
+
+
+const generateSignificance = (summary) => {
+    const firstSentence = summary.split('.')[0];
+    return firstSentence.length > 150 ? firstSentence.substring(0, 150) + '...' : firstSentence + '.';
+};
 
 const DiscoveriesPage = () => {
     const [discoveries, setDiscoveries] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
-    // Dummy data for now
-    const dummyDiscoveries = [
-        {
-            id: 1,
-            title: "Water Ice Deposits Found on Mars",
-            date: "2024-01-15",
-            category: "Planetary",
-            image: "https://www.nasa.gov/sites/default/files/thumbnails/image/pia23302-16.jpg",
-            description: "New findings reveal significant deposits of water ice just below the Martian surface.",
-            significance: "Could provide resources for future Mars missions and potential evidence of past life."
-        },
-        {
-            id: 2,
-            title: "New Exoplanet in Habitable Zone",
-            date: "2024-01-10",
-            category: "Exoplanets",
-            image: "https://www.nasa.gov/sites/default/files/thumbnails/image/kepler-16b_artwork.jpg",
-            description: "Discovery of an Earth-sized planet orbiting within its star's habitable zone.",
-            significance: "Potential candidate for hosting life as we know it."
-        },
-        {
-            id: 3,
-            title: "Mysterious Radio Signals Detected",
-            date: "2024-01-05",
-            category: "Astronomy",
-            image: "https://www.nasa.gov/sites/default/files/thumbnails/image/swift.jpg",
-            description: "Fast radio bursts detected from a previously unknown source in deep space.",
-            significance: "May help understand the nature of these enigmatic cosmic events."
-        }
-    ];
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('all');
 
     useEffect(() => {
-        // Using dummy data for now
-        setDiscoveries(dummyDiscoveries);
-        setLoading(false);
-
-        // Uncomment when API is ready
-        /*
-        const fetchDiscoveries = async () => {
+        const loadData = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/discoveries');
-                setDiscoveries(response.data);
+                const data = await fetchDiscoveriesData();
+                setDiscoveries(data);
                 setLoading(false);
             } catch (error) {
                 setError(error.message);
                 setLoading(false);
             }
         };
-        fetchDiscoveries();
-        */
+
+        loadData();
+
+        // Refresh every 5 minutes
+        const interval = setInterval(loadData, 300000);
+        return () => clearInterval(interval);
     }, []);
+
+    const filteredDiscoveries = discoveries.filter(discovery => {
+        const matchesSearch = discovery.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            discovery.description.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = selectedCategory === 'all' || discovery.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex justify-center items-center">
+            <div className="min-h-screen bg-black flex justify-center items-center">
                 <div className="space-y-4">
                     <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                     <p className="text-blue-500">Loading discoveries...</p>
@@ -72,63 +101,104 @@ const DiscoveriesPage = () => {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gray-900 flex justify-center items-center">
-                <div className="text-red-500">Error: {error}</div>
+            <div className="min-h-screen bg-black flex justify-center items-center">
+                <div className="text-red-500 bg-red-500/10 p-6 rounded-lg">Error: {error}</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-black text-white pt-20">
             {/* Hero Section */}
-            <div className="max-w-7xl mx-auto text-center mb-16">
-                <motion.h1 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-4xl md:text-5xl font-bold mb-6"
-                >
-                    Latest Space Discoveries
-                </motion.h1>
-                <motion.p 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="text-xl text-gray-300"
-                >
-                    Exploring the latest breakthroughs in space exploration
-                </motion.p>
+            <div className="relative h-[60vh] flex items-center justify-center">
+                <div 
+                    className="absolute inset-0 bg-cover bg-center opacity-40"
+                    style={{ 
+                        backgroundImage: 'url("https://static.vecteezy.com/system/resources/thumbnails/051/288/748/small_2x/a-stunning-view-of-the-earth-from-space-with-a-sunrise-illuminating-the-horizon-and-a-star-studded-sky-above-free-video.jpg")',
+                    }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black" />
+                
+                <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
+                    <motion.h1 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-5xl md:text-6xl font-light mb-8"
+                    >
+                        Space Discoveries
+                    </motion.h1>
+                    
+                    <div className="max-w-xl mx-auto relative">
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search discoveries..."
+                            className="w-full bg-black/50 backdrop-blur-md border border-gray-700 rounded-full py-3 px-6 pr-12 focus:outline-none focus:border-blue-500"
+                        />
+                        <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
+                </div>
             </div>
 
-            {/* Discovery Cards */}
-            <div className="max-w-7xl mx-auto">
-                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                    {discoveries.map((discovery, index) => (
-                        <motion.div
-                            key={discovery.id}
-                            initial={{ opacity: 0, y: 50 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
+            {/* Category Filters */}
+            <div className="max-w-7xl mx-auto px-4 py-8">
+                <div className="flex flex-wrap justify-center gap-4">
+                    {['all', 'Planetary', 'Exoplanets', 'Astronomy', 'Deep Space'].map((category) => (
+                        <button
+                            key={category}
+                            onClick={() => setSelectedCategory(category)}
+                            className={`px-6 py-2 rounded-full transition-all duration-300 ${
+                                selectedCategory === category 
+                                ? 'bg-blue-500 text-white' 
+                                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                            }`}
                         >
-                            <div className="relative">
-                                <img 
-                                    src={discovery.image} 
+                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Discovery Grid */}
+            <div className="max-w-7xl mx-auto px-4 py-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {filteredDiscoveries.map((discovery, index) => (
+                        <motion.article
+                            key={discovery.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
+                            className="group bg-gray-900/50 backdrop-blur-md rounded-lg overflow-hidden border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300"
+                        >
+                            <div className="relative h-48 overflow-hidden">
+                                <img
+                                    src={discovery.image || '/api/placeholder/400/300'}
                                     alt={discovery.title}
-                                    className="w-full h-48 object-cover"
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    onError={(e) => {
+                                        e.target.src = '/api/placeholder/400/300';
+                                    }}
                                 />
-                                <div className="absolute top-4 right-4">
-                                    <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
-                                        {discovery.category}
-                                    </span>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
+                                <div className="absolute bottom-4 left-4 right-4">
+                                    <div className="flex justify-between items-center">
+                                        <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
+                                            {discovery.category}
+                                        </span>
+                                        <span className="text-sm text-gray-300 flex items-center">
+                                            <Calendar className="w-4 h-4 mr-2" />
+                                            {new Date(discovery.date).toLocaleDateString()}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
+                            
                             <div className="p-6">
-                                <div className="text-sm text-gray-400 mb-2">
-                                    {new Date(discovery.date).toLocaleDateString()}
-                                </div>
-                                <h3 className="text-xl font-bold mb-3">{discovery.title}</h3>
-                                <p className="text-gray-300 mb-4">{discovery.description}</p>
-                                <div className="bg-gray-700/50 p-4 rounded-lg">
+                                <h2 className="text-xl font-light mb-4 line-clamp-2">{discovery.title}</h2>
+                                <p className="text-gray-400 mb-6 line-clamp-3">{discovery.description}</p>
+                                
+                                <div className="bg-black/30 p-4 rounded-lg mb-6">
                                     <h4 className="text-sm font-semibold text-blue-400 mb-2">
                                         Scientific Significance
                                     </h4>
@@ -136,60 +206,48 @@ const DiscoveriesPage = () => {
                                         {discovery.significance}
                                     </p>
                                 </div>
-                                <button className="mt-6 w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-colors duration-300">
-                                    Learn More
-                                </button>
+
+                                <a
+                                    href={discovery.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-colors duration-300 flex items-center justify-center group"
+                                >
+                                    Read Full Article
+                                    <ArrowRight className="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" />
+                                </a>
                             </div>
-                        </motion.div>
-            ))}
-            </div>
-        </div>
-
-        {/* Categories Section */}
-        <div className="max-w-7xl mx-auto mt-16">
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-                {['Planetary', 'Exoplanets', 'Astronomy', 'Deep Space'].map((category, index) => (
-                    <motion.div
-                        key={category}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="bg-gray-800/50 p-6 rounded-lg text-center cursor-pointer hover:bg-gray-700/50 transition-all duration-300"
-                    >
-                        <h3 className="text-lg font-semibold text-blue-400 mb-2">{category}</h3>
-                        <p className="text-sm text-gray-300">
-                            Explore {category.toLowerCase()} discoveries
-                        </p>
-                    </motion.div>
-                ))}
-            </div>
-        </div>
-
-        {/* Newsletter Section */}
-        <div className="max-w-3xl mx-auto mt-20 text-center">
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-r from-blue-900/50 to-purple-900/50 p-8 rounded-2xl"
-            >
-                <h2 className="text-2xl font-bold mb-4">Stay Updated</h2>
-                <p className="text-gray-300 mb-6">
-                    Subscribe to our newsletter for the latest space discoveries
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <input
-                        type="email"
-                        placeholder="Enter your email"
-                        className="px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-                    />
-                    <button className="px-6 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors duration-300">
-                        Subscribe
-                    </button>
+                        </motion.article>
+                    ))}
                 </div>
-            </motion.div>
+            </div>
+
+            {/* Newsletter Section */}
+            <div className="max-w-3xl mx-auto px-4 py-20">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 p-8 rounded-2xl backdrop-blur-sm border border-gray-800/50"
+                >
+                    <h2 className="text-2xl font-light mb-4 text-center">Stay Updated</h2>
+                    <p className="text-gray-300 mb-6 text-center">
+                        Get notified about new space discoveries and breakthroughs
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <input
+                            type="email"
+                            placeholder="Enter your email"
+                            className="flex-1 max-w-md px-4 py-2 rounded-lg bg-black/50 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
+                        />
+                        <button className="px-8 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors duration-300 flex items-center justify-center">
+                            Subscribe
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                        </button>
+                    </div>
+                </motion.div>
+            </div>
         </div>
-    </div>
-);
+    );
 };
 
 export default DiscoveriesPage;

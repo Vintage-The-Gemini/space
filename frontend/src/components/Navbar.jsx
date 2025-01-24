@@ -1,52 +1,79 @@
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Menu, X, Rocket } from 'lucide-react';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
-    <nav className="bg-gray-800 text-white p-4 flex justify-between items-center">
-      {/* Logo */}
-      <h1 className="text-xl font-bold">Space Explorer</h1>
+    <nav className={`fixed w-full z-50 transition-all duration-300 ${
+      isScrolled ? 'bg-black/80 backdrop-blur-md' : 'bg-transparent'
+    }`}>
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex justify-between items-center h-20">
+          <Link to="/" className="flex items-center space-x-3">
+            <Rocket className="h-8 w-8 text-blue-500" />
+            <span className="text-2xl font-light text-white">Space Explorer</span>
+          </Link>
 
-      {/* Hamburger Menu for Mobile */}
-      <button 
-        className="md:hidden block text-white focus:outline-none" 
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          className="h-6 w-6" 
-          fill="none" 
-          viewBox="0 0 24 24" 
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
+          <button 
+            className="md:hidden text-white"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
 
-      {/* Menu Items */}
-      <div 
-        className={`md:flex md:space-x-4 md:items-center ${isOpen ? "block" : "hidden"} w-full md:w-auto`}
-      >
-        <Link 
-          to="/" 
-          className="block md:inline-block hover:text-blue-400 p-2 md:p-0"
-        >
-          Home
-        </Link>
-        <Link 
-          to="/discoveries" 
-          className="block md:inline-block hover:text-blue-400 p-2 md:p-0"
-        >
-          Discoveries
-        </Link>
-        <Link 
-          to="/updates" 
-          className="block md:inline-block hover:text-blue-400 p-2 md:p-0"
-        >
-          Updates
-        </Link>
+          <div className="hidden md:flex items-center space-x-8">
+            {[
+              { path: '/', label: 'Home' },
+              { path: '/discoveries', label: 'Discoveries' },
+              { path: '/instruments', label: 'Instruments' },
+              { path: '/launches', label: 'Launches' },
+              { path: '/updates', label: 'Updates' }
+            ].map(({ path, label }) => (
+              <Link
+                key={path}
+                to={path}
+                className="text-gray-300 hover:text-white transition-colors duration-300 text-sm uppercase tracking-wider"
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        <div className={`md:hidden transition-all duration-300 ${
+          isOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+        } overflow-hidden`}>
+          <div className="py-4 space-y-4">
+            {[
+              { path: '/', label: 'Home' },
+              { path: '/discoveries', label: 'Discoveries' },
+              { path: '/instruments', label: 'Instruments' },
+              { path: '/launches', label: 'Launches' },
+              { path: '/updates', label: 'Updates' }
+            ].map(({ path, label }) => (
+              <Link
+                key={path}
+                to={path}
+                onClick={() => setIsOpen(false)}
+                className="block text-gray-300 hover:text-white transition-colors duration-300 py-2"
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
     </nav>
   );

@@ -3,16 +3,18 @@ const router = express.Router();
 const {
     getInstruments,
     getInstrument,
-    createInstrument,
+    addInstrument,
     updateInstrument,
-    deleteInstrument,
-    getInstrumentStats
+    deleteInstrument
 } = require('../controllers/instrumentsController');
 
-// Base route: /api/instruments
-router.route('/').get(getInstruments).post(createInstrument);
-router.route('/stats').get(getInstrumentStats);
-router.route('/:id')
+router
+    .route('/')
+    .get(getInstruments)
+    .post(addInstrument);
+
+router
+    .route('/:id')
     .get(getInstrument)
     .put(updateInstrument)
     .delete(deleteInstrument);

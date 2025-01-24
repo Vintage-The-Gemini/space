@@ -1,44 +1,61 @@
-const asyncHandler = require('express-async-handler');
-const nasaApi = require('../services/nasaApi');
+const axios = require('axios');
+require('dotenv').config();
 
-// @desc    Get Astronomy Picture of the Day
-// @route   GET /api/nasa/apod
-// @access  Public
-const getAstronomyPicture = asyncHandler(async (req, res) => {
-    const data = await nasaApi.getAstronomyPictureOfDay();
-    res.json(data);
-});
+const NASA_API_KEY = process.env.NASA_API_KEY;
 
-// @desc    Get Mars Rover Photos
-// @route   GET /api/nasa/mars-photos
-// @access  Public
-const getMarsPhotos = asyncHandler(async (req, res) => {
-    const { rover = 'curiosity', sol = 1000 } = req.query;
-    const data = await nasaApi.getMarsRoverPhotos(rover, parseInt(sol));
-    res.json(data);
-});
+const getNasaAPOD = async (req, res) => {
+    try {
+        const response = await axios.get(`https://api.nasa.gov/planetary/apod?api_key=${NASA_API_KEY}`);
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching NASA APOD data', error: error.message });
+    }
+};
 
-// @desc    Get Near Earth Objects
-// @route   GET /api/nasa/neo-feed
-// @access  Public
-const getNearEarthObjects = asyncHandler(async (req, res) => {
-    const { start_date, end_date } = req.query;
-    const data = await nasaApi.getNeoFeed(start_date, end_date);
-    res.json(data);
-});
+const getMarsPhotos = async (req, res) => {
+    try {
+        const response = await axios.get(
+            `https://api.nasa.gov/mars-photos/api/v1/rovers/perseverance/latest_photos?api_key=${NASA_API_KEY}`
+        );
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching Mars photos', error: error.message });
+    }
+};
 
-// @desc    Get Earth Imagery
-// @route   GET /api/nasa/earth-imagery
-// @access  Public
-const getEarthImagery = asyncHandler(async (req, res) => {
-    const { lat, lon, date } = req.query;
-    const data = await nasaApi.getEarthImagery(lat, lon, date);
-    res.json(data);
-});
+const getNeoData = async (req, res) => {
+    try {
+        const response = await axios.get(
+            `https://api.nasa.gov/neo/rest/v1/feed/today?detailed=false&api_key=${NASA_API_KEY}`
+        );
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching NEO data', error: error.message });
+    }
+};
 
 module.exports = {
-    getAstronomyPicture,
+    getNasaAPOD,
     getMarsPhotos,
-    getNearEarthObjects,
-    getEarthImagery
+    getNeoData
+};
+
+const getMarsWeather = async (req, res) => {
+    try {
+        const response = await axios.get(
+            `https://api.nasa.gov/insight_weather/?api_key=${NASA_API_KEY}&feedtype=json&ver=1.0`
+        );
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching Mars weather', error: error.message });
+    }
+};
+
+const getSpaceEvents = async (req, res) => {
+    try {
+        // Implement space events fetching
+        res.json({ events: [] });
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching space events', error: error.message });
+    }
 };

@@ -1,33 +1,49 @@
 const express = require('express');
-const cors = require('cors');
 const dotenv = require('dotenv');
-const connectDB = require('./config/db');
-const { errorHandler, notFound } = require('./middleware/error');
+const mongoose = require('mongoose');
+const cors = require('cors');
 
 // Load env vars
 dotenv.config();
 
-// Connect to database
-connectDB();
+// Route imports
+const instrumentRoutes = require('./routes/instruments');
+const nasaRoutes = require('./routes/nasaRoutes');
 
 const app = express();
 
-// Body parser
+// Middleware
 app.use(express.json());
-
-// Enable CORS
 app.use(cors());
 
-// Mount routers
-app.use('/api/instruments', require('./routes/instruments'));
-app.use('/api/nasa', require('./routes/nasa'));
+// Routes
+app.use('/api/instruments', instrumentRoutes);
+app.use('/api/nasa', nasaRoutes);
 
-// Error handling
-app.use(notFound);
-app.use(errorHandler);
+// Connect to MongoDB
+const connectDB = async () => {
+    try {
+        const conn = await mongoose.connect(process.env.MONGO_URI);
+        console.log(`MongoDB Connected: ${conn.connection.host}`);
+    } catch (error) {
+        console.error(`Error: ${error.message}`);
+        process.exit(1);
+    }
+};
+
+connectDB();
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({
+        success: false,
+        error: 'Server Error'
+    });
+});
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
