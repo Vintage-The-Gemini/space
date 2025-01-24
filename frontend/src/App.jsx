@@ -11,6 +11,7 @@ import MarsExplorer from './components/nasa/MarsExplorer';
 import NeoTracker from './components/nasa/NeoTracker';
 import LaunchesPage from './pages/LaunchesPage';
 import Footer from './components/Footer';
+import TelemetryDashboard from './components/mission/TelemetryDashboard';
 
 function App() {
   return (
@@ -26,9 +27,9 @@ function App() {
             <Route path="/updates" element={<UpdatesPage />} />
             <Route path="/nasa" element={<NasaDashboard />} />
             <Route path="/launches" element={<LaunchesPage />} />
-
             <Route path="/nasa/mars" element={<MarsExplorer />} />
             <Route path="/nasa/neo" element={<NeoTracker />} />
+            <Route path="/mission/telemetry" element={<TelemetryDashboard />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>

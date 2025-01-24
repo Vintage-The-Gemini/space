@@ -38,7 +38,9 @@ const Navbar = () => {
               { path: '/discoveries', label: 'Discoveries' },
               { path: '/instruments', label: 'Instruments' },
               { path: '/launches', label: 'Launches' },
-              { path: '/updates', label: 'Updates' }
+              { path: '/updates', label: 'Updates' },
+              { path: '/mission/telemetry', label: 'Telemetry' }
+
             ].map(({ path, label }) => (
               <Link
                 key={path}
@@ -61,7 +63,9 @@ const Navbar = () => {
               { path: '/discoveries', label: 'Discoveries' },
               { path: '/instruments', label: 'Instruments' },
               { path: '/launches', label: 'Launches' },
-              { path: '/updates', label: 'Updates' }
+              { path: '/updates', label: 'Updates' },
+              { path: '/telemetry', label: 'Telemetry' }
+
             ].map(({ path, label }) => (
               <Link
                 key={path}
