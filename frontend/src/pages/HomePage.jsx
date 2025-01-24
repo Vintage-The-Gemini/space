@@ -2,6 +2,8 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+
+
 import { 
   Calendar, 
   Rocket, 
@@ -18,6 +20,8 @@ import NewsSection from '../components/NewsSection';
 import MarsPhotos from '../components/MarsPhotos';
 import Newsletter from '../components/Newsletter';
 import Footer from '../components/Footer';
+import { API_URL } from '../config/api';
+
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {

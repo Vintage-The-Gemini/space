@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Camera, Calendar, Map } from 'lucide-react';
 
+import { API_URL } from '../config/api';
+
+
 const MarsExplorer = () => {
   const [photos, setPhotos] = useState([]);
   const [selectedRover, setSelectedRover] = useState('curiosity');

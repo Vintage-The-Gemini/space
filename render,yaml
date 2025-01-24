@@ -1,0 +1,21 @@
+services:
+  - name: space-explorer-backend
+    type: web
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: NASA_API_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
+
+  - name: space-explorer-frontend
+    type: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://space-explorer-backend.onrender.com
