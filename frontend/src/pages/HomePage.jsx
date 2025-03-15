@@ -104,16 +104,16 @@ const HomePage = () => {
         setError(null);
 
         const [apodRes, newsRes, marsRes, neoRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/nasa/apod", {
+          axios.get("https://space-mgph.onrender.com/api/nasa/apod", {
             signal: abortController.signal,
           }),
           axios.get("https://api.spaceflightnewsapi.net/v4/articles?limit=6", {
             signal: abortController.signal,
           }),
-          axios.get("http://localhost:5000/api/nasa/mars-photos", {
+          axios.get("https://space-mgph.onrender.com/api/nasa/mars-photos", {
             signal: abortController.signal,
           }),
-          axios.get("http://localhost:5000/api/nasa/neo", {
+          axios.get("https://space-mgph.onrender.com/api/nasa/neo", {
             signal: abortController.signal,
           }),
         ]);

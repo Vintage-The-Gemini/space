@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Camera, Calendar, Map } from 'lucide-react';
-
-
-
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { Camera, Calendar, Map } from "lucide-react";
 
 const MarsExplorer = () => {
   const [photos, setPhotos] = useState([]);
-  const [selectedRover, setSelectedRover] = useState('curiosity');
+  const [selectedRover, setSelectedRover] = useState("curiosity");
   const [selectedSol, setSelectedSol] = useState(1000);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const rovers = ['Curiosity', 'Perseverance', 'Opportunity', 'Spirit'];
+  const rovers = ["Curiosity", "Perseverance", "Opportunity", "Spirit"];
 
   useEffect(() => {
     fetchMarsPhotos();
@@ -21,11 +18,13 @@ const MarsExplorer = () => {
   const fetchMarsPhotos = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:5000/api/nasa/mars/${selectedRover}?sol=${selectedSol}`);
+      const response = await axios.get(
+        `https://space-mgph.onrender.com/api/nasa/mars/${selectedRover}?sol=${selectedSol}`
+      );
       setPhotos(response.data.photos);
       setLoading(false);
     } catch (err) {
-      setError('Error fetching Mars photos');
+      setError("Error fetching Mars photos");
       setLoading(false);
     }
   };
@@ -35,7 +34,7 @@ const MarsExplorer = () => {
       {/* Control Panel */}
       <div className="bg-gray-800 rounded-lg p-6 mb-8">
         <h2 className="text-2xl text-white font-bold mb-4">Mars Explorer</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Rover Selection */}
           <div>
@@ -45,7 +44,7 @@ const MarsExplorer = () => {
               onChange={(e) => setSelectedRover(e.target.value)}
               className="w-full bg-gray-700 text-white rounded p-2"
             >
-              {rovers.map(rover => (
+              {rovers.map((rover) => (
                 <option key={rover} value={rover.toLowerCase()}>
                   {rover}
                 </option>
@@ -78,7 +77,10 @@ const MarsExplorer = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {photos.map((photo) => (
-            <div key={photo.id} className="bg-gray-800 rounded-lg overflow-hidden">
+            <div
+              key={photo.id}
+              className="bg-gray-800 rounded-lg overflow-hidden"
+            >
               <img
                 src={photo.img_src}
                 alt={`Mars - ${photo.camera.full_name}`}
@@ -91,7 +93,9 @@ const MarsExplorer = () => {
                 </div>
                 <div className="flex items-center mb-2">
                   <Calendar className="h-5 w-5 text-green-400 mr-2" />
-                  <span className="text-gray-300">{new Date(photo.earth_date).toLocaleDateString()}</span>
+                  <span className="text-gray-300">
+                    {new Date(photo.earth_date).toLocaleDateString()}
+                  </span>
                 </div>
                 <div className="flex items-center">
                   <Map className="h-5 w-5 text-red-400 mr-2" />
