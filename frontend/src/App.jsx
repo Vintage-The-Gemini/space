@@ -1,24 +1,26 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import HomePage from './pages/HomePage';
-import InstrumentsList from './pages/InstrumentsList';
-import InstrumentDetails from './pages/InstrumentDetails';
-import NasaDashboard from './components/nasa/NasaDashboard';
-import UpdatesPage from './pages/UpdatesPage';
-import DiscoveriesPage from './pages/DiscoveriesPage';
-import NotFoundPage from './components/NotFoundPage';
-import MarsExplorer from './components/nasa/MarsExplorer';
-import NeoTracker from './components/nasa/NeoTracker';
-import LaunchesPage from './pages/LaunchesPage';
-import Footer from './components/Footer';
-import TelemetryDashboard from './components/mission/TelemetryDashboard';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import HomePage from "./pages/HomePage";
+import InstrumentsList from "./pages/InstrumentsList";
+import InstrumentDetails from "./pages/InstrumentDetails";
+import NasaDashboard from "./components/nasa/NasaDashboard";
+import UpdatesPage from "./pages/UpdatesPage";
+import DiscoveriesPage from "./pages/DiscoveriesPage";
+import NotFoundPage from "./components/NotFoundPage";
+import MarsExplorer from "./components/nasa/MarsExplorer";
+import NeoTracker from "./components/nasa/NeoTracker";
+import LaunchesPage from "./pages/LaunchesPage";
+import Footer from "./components/Footer";
+import TelemetryDashboard from "./components/mission/TelemetryDashboard";
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-900">
+      <div className="flex flex-col min-h-screen bg-gray-900">
         <Navbar />
-        <main className="">
+        <main className="flex-grow">
+          {" "}
+          {/* Removed pt-20 as it's now in each component */}
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/instruments" element={<InstrumentsList />} />
@@ -33,8 +35,8 @@ function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
+        <Footer />
       </div>
-      <Footer/>
     </Router>
   );
 }
