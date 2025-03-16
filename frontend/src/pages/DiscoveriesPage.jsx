@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import axios from "axios";
 import {
   Search,
   Calendar,
@@ -8,6 +9,8 @@ import {
   Filter,
   Star,
   Globe,
+  AlertTriangle,
+  Loader,
 } from "lucide-react";
 
 const DiscoveriesPage = () => {
@@ -16,304 +19,299 @@ const DiscoveriesPage = () => {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-
-  // Predefined major astronomical discoveries
-  const majorDiscoveries = [
-    {
-      id: "jwst-exoplanet-atmos",
-      title: "JWST Detects Carbon Dioxide in Exoplanet Atmosphere",
-      date: "2022-08-25",
-      category: "Exoplanets",
-      image:
-        "https://www.nasa.gov/wp-content/uploads/2023/03/stsci-01g8jz43rrtsqqgz25gcsfqcvw.png",
-      description:
-        "The James Webb Space Telescope has made the first clear detection of carbon dioxide in the atmosphere of a planet outside our solar system. The finding provides important insights into the composition and formation of the exoplanet WASP-39 b.",
-      significance:
-        "First definitive detection of CO2 in an exoplanet atmosphere, opening new possibilities for understanding the atmospheric chemistry of distant worlds.",
-      source: "NASA",
-      sourceUrl:
-        "https://www.nasa.gov/feature/goddard/2022/nasa-s-webb-detects-carbon-dioxide-in-exoplanet-atmosphere",
-    },
-    {
-      id: "black-hole-image",
-      title: "First Image of a Black Hole",
-      date: "2019-04-10",
-      category: "Black Holes",
-      image:
-        "https://www.nasa.gov/wp-content/uploads/2023/03/black-hole-image-release.jpg",
-      description:
-        "The Event Horizon Telescope (EHT) collaboration revealed the first direct visual evidence of the supermassive black hole at the center of galaxy M87 and its shadow. The image shows a bright ring formed as light bends due to the intense gravity around the black hole.",
-      significance:
-        "First direct visual confirmation of black holes, validating Einstein's theory of general relativity in extreme conditions.",
-      source: "Event Horizon Telescope Collaboration",
-      sourceUrl: "https://eventhorizontelescope.org/archives/1",
-    },
-    {
-      id: "gravitational-waves",
-      title: "First Detection of Gravitational Waves",
-      date: "2016-02-11",
-      category: "Astrophysics",
-      image: "https://www.ligo.caltech.edu/images/ligo20160211a",
-      description:
-        "LIGO scientists observed ripples in the fabric of spacetime called gravitational waves, arriving at Earth from a cataclysmic event in the distant universe. This confirms a major prediction of Albert Einstein's 1915 general theory of relativity.",
-      significance:
-        "Opens an unprecedented new window onto the cosmos and provides new ways to study the violent and extreme universe.",
-      source: "LIGO Scientific Collaboration",
-      sourceUrl: "https://www.ligo.caltech.edu/news/ligo20160211",
-    },
-    {
-      id: "higgs-boson",
-      title: "Discovery of the Higgs Boson",
-      date: "2012-07-04",
-      category: "Particle Physics",
-      image: "https://cds.cern.ch/images/CERN-HOMEWEB-PHO-2017-107-2",
-      description:
-        "CERN's Large Hadron Collider experiments ATLAS and CMS announced the discovery of a particle consistent with the Higgs boson, a fundamental particle associated with the Higgs field that gives mass to other particles.",
-      significance:
-        "Confirmed the existence of the Higgs field and completed the Standard Model of particle physics, helping explain how fundamental particles acquire mass.",
-      source: "CERN",
-      sourceUrl: "https://home.cern/science/physics/higgs-boson",
-    },
-    {
-      id: "exoplanet-discovery",
-      title: "First Confirmed Exoplanets Discovered",
-      date: "1992-01-22",
-      category: "Exoplanets",
-      image:
-        "https://exoplanets.nasa.gov/system/resources/detail_files/138_PIA23694.gif",
-      description:
-        "Astronomers Alex Wolszczan and Dale Frail announced the discovery of two planets orbiting the pulsar PSR 1257+12, marking the first confirmed discovery of planets outside our solar system.",
-      significance:
-        "Opened the field of exoplanet research, leading to the discovery of thousands of worlds beyond our solar system.",
-      source: "NASA",
-      sourceUrl: "https://exoplanets.nasa.gov/",
-    },
-    {
-      id: "dark-energy",
-      title: "Discovery of Accelerating Universe Expansion",
-      date: "1998-09-30",
-      category: "Cosmology",
-      image:
-        "https://www.nasa.gov/wp-content/uploads/2021/07/universe_expansion_en_no_lines.jpg",
-      description:
-        "Two independent teams of astronomers observed that distant supernovae are dimmer than expected, indicating that the universe's expansion is accelerating. This led to the concept of dark energy, a mysterious force pushing the universe apart.",
-      significance:
-        "Fundamentally changed our understanding of the universe's fate and revealed that about 68% of the universe consists of dark energy.",
-      source: "Nobel Prize",
-      sourceUrl: "https://www.nobelprize.org/prizes/physics/2011/summary/",
-    },
-    {
-      id: "cosmic-microwave-background",
-      title: "Detection of Cosmic Microwave Background",
-      date: "1964-05-20",
-      category: "Cosmology",
-      image:
-        "https://www.nasa.gov/wp-content/uploads/2015/03/dmr_cosmic_background_radiation.jpg",
-      description:
-        "Arno Penzias and Robert Wilson discovered the cosmic microwave background (CMB) radiation, the thermal radiation left over from the Big Bang. The discovery provided substantial evidence for the Big Bang theory of cosmic evolution.",
-      significance:
-        "One of the strongest pieces of evidence for the Big Bang theory, confirming that the universe began in an extremely hot and dense state.",
-      source: "NASA",
-      sourceUrl:
-        "https://science.nasa.gov/astrophysics/focus-areas/what-powered-the-big-bang/",
-    },
-    {
-      id: "hubble-constant",
-      title: "Hubble's Law - The Expanding Universe",
-      date: "1929-01-17",
-      category: "Cosmology",
-      image:
-        "https://cdn.spacetelescope.org/archives/images/publicationjpg/heic1819a.jpg",
-      description:
-        "Edwin Hubble discovered that galaxies are moving away from us with a velocity proportional to their distance. This observation led to the understanding that the universe is expanding, a cornerstone of the Big Bang theory.",
-      significance:
-        "Revolutionized our understanding of the universe, proving it is not static but expanding, and laid the foundation for modern cosmology.",
-      source: "Space Telescope Science Institute",
-      sourceUrl:
-        "https://hubblesite.org/contents/articles/edwin-hubble-and-the-expanding-universe",
-    },
-    {
-      id: "neutron-star-collision",
-      title: "First Observation of Neutron Star Merger",
-      date: "2017-08-17",
-      category: "Astrophysics",
-      image:
-        "https://www.nasa.gov/wp-content/uploads/2017/10/neutron-merger-detection.jpg",
-      description:
-        "Scientists detected gravitational waves from the merger of two neutron stars for the first time, along with gamma rays, visible light, and other electromagnetic radiation. This event marked the birth of multi-messenger astronomy.",
-      significance:
-        "Confirmed that neutron star collisions produce heavy elements like gold and platinum, and provided a new way to measure the expansion rate of the universe.",
-      source: "LIGO/Virgo/NASA",
-      sourceUrl:
-        "https://www.nasa.gov/press-release/nasa-missions-catch-first-light-from-a-gravitational-wave-event",
-    },
-    {
-      id: "habitable-exoplanets",
-      title: "Discovery of Potentially Habitable Exoplanets",
-      date: "2020-04-15",
-      category: "Exoplanets",
-      image:
-        "https://exoplanets.nasa.gov/system/resources/detail_files/2241_TOI700d-with-star-FINAL-3.jpg",
-      description:
-        "NASA's TESS mission has discovered multiple Earth-sized exoplanets in the habitable zones of their stars, where conditions could allow liquid water to exist. These include TOI-700 d, which orbits a small, cool M dwarf star.",
-      significance:
-        "Expands our understanding of potentially habitable worlds and provides targets for future atmospheric characterization by telescopes like JWST.",
-      source: "NASA",
-      sourceUrl:
-        "https://exoplanets.nasa.gov/news/1612/nasa-planet-hunter-finds-its-1st-earth-size-habitable-zone-world/",
-    },
-    {
-      id: "gw-neutronstar-collision",
-      title: "First Gravitational Wave Signal from Binary Neutron Star Merger",
-      date: "2017-08-17",
-      category: "Gravitational Waves",
-      image: "https://www.nasa.gov/wp-content/uploads/2017/10/ed16-315-057.jpg",
-      description:
-        "LIGO and Virgo detected gravitational waves from two neutron stars spiraling inward and colliding. Unlike previous detections from black holes, this event was also observed across the electromagnetic spectrum, from gamma rays to radio waves.",
-      significance:
-        "First multi-messenger observation with gravitational waves, confirming neutron star mergers as the source of short gamma-ray bursts and the creation of heavy elements.",
-      source: "LIGO/NASA",
-      sourceUrl: "https://www.ligo.caltech.edu/page/press-release-gw170817",
-    },
-    {
-      id: "water-on-mars",
-      title: "Evidence of Flowing Water on Mars",
-      date: "2015-09-28",
-      category: "Planetary Science",
-      image:
-        "https://mars.nasa.gov/system/feature_items/images/3500_MRO-RSL-Main-web.jpg",
-      description:
-        "NASA's Mars Reconnaissance Orbiter detected signatures of hydrated minerals on slopes where mysterious streaks called recurring slope lineae are observed. This provided strong evidence for flowing liquid water on present-day Mars.",
-      significance:
-        "Suggests that Mars may still have environments where microbial life could potentially exist today.",
-      source: "NASA",
-      sourceUrl:
-        "https://www.nasa.gov/press-release/nasa-confirms-evidence-that-liquid-water-flows-on-today-s-mars",
-    },
-    {
-      id: "fast-radio-bursts",
-      title: "Fast Radio Bursts from Beyond Our Galaxy",
-      date: "2007-07-24",
-      category: "Radio Astronomy",
-      image: "https://www.nrao.edu/images/fast-radio-bursts.jpg",
-      description:
-        "Astronomers discovered Fast Radio Bursts (FRBs), intense bursts of radio emission that last milliseconds and originate from distant galaxies. Some FRBs have been found to repeat, challenging explanations involving cataclysmic events.",
-      significance:
-        "May provide new insights into extreme astrophysical environments and could potentially be used as cosmic probes to study the intergalactic medium.",
-      source: "National Radio Astronomy Observatory",
-      sourceUrl:
-        "https://public.nrao.edu/news/2017-02-23-astronomers-trace-cosmic-neutrinos-to-enormous-black-holes/",
-    },
-    {
-      id: "voyager-interstellar",
-      title: "Voyager 1 Enters Interstellar Space",
-      date: "2012-08-25",
-      category: "Space Exploration",
-      image: "https://www.nasa.gov/wp-content/uploads/2018/07/vger1.gif",
-      description:
-        "NASA's Voyager 1 spacecraft became the first human-made object to enter interstellar space, crossing the boundary of our solar system's influence (the heliopause) and entering the region between stars.",
-      significance:
-        "First direct measurements of the interstellar medium and demonstration of humanity's ability to send objects beyond our solar system.",
-      source: "NASA",
-      sourceUrl: "https://voyager.jpl.nasa.gov/mission/interstellar-mission/",
-    },
-    {
-      id: "sagittarius-a",
-      title: "Confirmation of Supermassive Black Hole at Milky Way's Center",
-      date: "2008-12-10",
-      category: "Black Holes",
-      image: "https://cdn.eso.org/images/screen/eso0846a.jpg",
-      description:
-        "Astronomers confirmed the existence of a supermassive black hole at the center of our Milky Way galaxy, known as Sagittarius A*, by tracking the orbits of stars around an invisible massive object over 16 years.",
-      significance:
-        "Provided direct evidence that supermassive black holes exist at the centers of galaxies and offered a laboratory to test Einstein's theory of general relativity.",
-      source: "European Southern Observatory",
-      sourceUrl: "https://www.eso.org/public/news/eso0846/",
-    },
-    {
-      id: "dark-matter-evidence",
-      title: "Evidence for Dark Matter",
-      date: "1970-02-10",
-      category: "Astrophysics",
-      image: "https://www.nasa.gov/wp-content/uploads/2019/10/darkmatter.jpeg",
-      description:
-        "Vera Rubin and Kent Ford observed that stars at the edges of galaxies move much faster than expected based on visible matter alone, providing strong evidence for the existence of invisible 'dark matter' that dominates the mass of galaxies.",
-      significance:
-        "Revolutionized our understanding of the universe by revealing that about 85% of matter in the cosmos is invisible and of unknown composition.",
-      source: "NASA",
-      sourceUrl:
-        "https://www.nasa.gov/audience/forstudents/5-8/features/nasa-knows/what-is-dark-matter-58.html",
-    },
-    {
-      id: "first-exoplanet-star",
-      title: "First Exoplanet Discovered Around Sun-like Star",
-      date: "1995-10-06",
-      category: "Exoplanets",
-      image:
-        "https://www.nasa.gov/wp-content/uploads/2015/03/16278559311_1c0b5ca9cf_o.jpg",
-      description:
-        "Astronomers Michel Mayor and Didier Queloz announced the discovery of 51 Pegasi b, a Jupiter-sized planet orbiting a Sun-like star. This was the first confirmed discovery of an exoplanet orbiting a main-sequence star.",
-      significance:
-        "Demonstrated that our solar system is not unique and paved the way for the discovery of thousands of exoplanets, revolutionizing our understanding of planetary systems.",
-      source: "Nobel Prize",
-      sourceUrl:
-        "https://www.nobelprize.org/prizes/physics/2019/press-release/",
-    },
-    {
-      id: "pulsars-discovery",
-      title: "Discovery of Pulsars",
-      date: "1967-11-28",
-      category: "Neutron Stars",
-      image: "https://www.nasa.gov/wp-content/uploads/2013/01/crab_nebula.jpg",
-      description:
-        "Jocelyn Bell Burnell discovered pulsars, rapidly rotating neutron stars that emit regular pulses of radio waves. Initially called 'LGM' (Little Green Men) as a joke about potential alien signals, these objects provided confirmation of neutron stars predicted by theory.",
-      significance:
-        "Confirmed the existence of neutron stars, the ultra-dense remnants of supernova explosions, providing a natural laboratory for extreme physics.",
-      source: "NASA",
-      sourceUrl:
-        "https://www.nasa.gov/feature/goddard/2018/the-1967-stellar-radio-pulse-discovery",
-    },
-    {
-      id: "jupiter-shoemaker-levy",
-      title: "Comet Shoemaker-Levy 9 Impacts Jupiter",
-      date: "1994-07-16",
-      category: "Planetary Science",
-      image: "https://www.nasa.gov/wp-content/uploads/2016/07/pia00139.jpg",
-      description:
-        "Astronomers observed a comet that had broken into fragments collide with Jupiter, marking the first direct observation of an extraterrestrial collision of Solar System objects. The impacts left dark spots on Jupiter that remained visible for many months.",
-      significance:
-        "Provided unprecedented insights into the physics of planetary impacts and raised awareness about the potential threat of Earth impacts.",
-      source: "NASA",
-      sourceUrl:
-        "https://www.jpl.nasa.gov/news/25-years-ago-comet-impacts-jupiter-and-helps-assess-impact-threat-to-earth",
-    },
-    {
-      id: "extrasolar-planet-system",
-      title: "First Multi-Planet System Beyond Our Solar System",
-      date: "1999-04-15",
-      category: "Exoplanets",
-      image:
-        "https://www.nasa.gov/wp-content/uploads/2019/06/upsilon-andromedae.jpg",
-      description:
-        "Astronomers discovered the first multi-planet system around a main-sequence star other than our Sun. Three giant planets were found orbiting the star Upsilon Andromedae, demonstrating that planetary systems are common in the universe.",
-      significance:
-        "Showed that complex planetary systems exist beyond our solar system, suggesting that planet formation is a common process around stars.",
-      source: "NASA",
-      sourceUrl:
-        "https://exoplanets.nasa.gov/resources/168/the-upsilon-andromedae-system/",
-    },
-  ];
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
-    // We're using only our preset major astronomical discoveries
-    // Sort by date, newest first
-    const sortedDiscoveries = [...majorDiscoveries].sort(
-      (a, b) => new Date(b.date) - new Date(a.date)
-    );
+    // Reset state when filters change
+    setDiscoveries([]);
+    setPage(1);
+    setHasMore(true);
+    setLoading(true);
 
-    setDiscoveries(sortedDiscoveries);
-    setLoading(false);
-  }, []);
+    // Use a small timeout to prevent rapid consecutive API calls when switching categories
+    const timer = setTimeout(() => {
+      fetchDiscoveries();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [selectedCategory]);
+
+  const fetchDiscoveries = async () => {
+    try {
+      setLoading(true);
+
+      // Define preset placeholder images for different categories to avoid loading issues
+      const placeholderImages = {
+        Exoplanets:
+          "https://www.nasa.gov/wp-content/uploads/2019/11/trappist-1e-1.jpg",
+        "Black Holes":
+          "https://www.nasa.gov/wp-content/uploads/2019/05/stsci-h-p1912a-f-1000x1000.jpg",
+        Galaxies:
+          "https://esahubble.org/media/archives/images/large/heic0602a.jpg",
+        "Stellar Physics":
+          "https://www.nasa.gov/wp-content/uploads/2020/01/trumpler14-1.jpg",
+        "Planetary Science":
+          "https://www.nasa.gov/wp-content/uploads/2021/06/pia24333-1.jpeg",
+        Cosmology:
+          "https://esahubble.org/media/archives/images/large/heic0916a.jpg",
+        "Gravitational Waves":
+          "https://www.nasa.gov/wp-content/uploads/2018/06/neutron-star-merger-artists-conception.jpg",
+        Astrophysics:
+          "https://www.nasa.gov/wp-content/uploads/2019/04/crab_nebula-1.jpg",
+        "High Energy Astrophysics":
+          "https://www.nasa.gov/wp-content/uploads/2018/11/cygx3-1.jpg",
+        Instrumentation:
+          "https://www.nasa.gov/wp-content/uploads/2023/09/webb.jpg",
+      };
+
+      // Use a default placeholder for any missing categories
+      const defaultPlaceholder =
+        "https://www.nasa.gov/wp-content/uploads/2019/07/hubble-gallery.jpg";
+
+      // Parallel API calls to different sources - but limit number of sources based on filter
+      // This reduces image loading issues when switching categories
+      let nasaResponse, arxivResponse, spacenewsResponse;
+
+      // Don't make all API calls at once, prioritize based on category
+      try {
+        // NASA API for space discoveries
+        nasaResponse = await axios.get("https://images-api.nasa.gov/search", {
+          params: {
+            q:
+              selectedCategory === "all"
+                ? "discovery astronomy"
+                : selectedCategory,
+            media_type: "image",
+            year_start: "2020", // Recent discoveries
+            page_size: 12, // Reduced from 20 to limit images loading at once
+          },
+          timeout: 5000, // Add timeout to prevent long loading
+        });
+      } catch (error) {
+        console.log("NASA API error:", error);
+        nasaResponse = { data: { collection: { items: [] } } };
+      }
+
+      try {
+        // arXiv API for scientific papers
+        arxivResponse = await axios.get("https://export.arxiv.org/api/query", {
+          params: {
+            search_query:
+              selectedCategory === "all"
+                ? "cat:astro-ph"
+                : `cat:astro-ph AND ${selectedCategory.toLowerCase()}`,
+            start: 0,
+            max_results: 8, // Reduced from 20
+            sortBy: "submittedDate",
+            sortOrder: "descending",
+          },
+          timeout: 5000,
+          // arXiv API returns XML
+          transformResponse: (data) => {
+            // Simple XML parsing - in production use proper XML parser
+            const entries = data.match(/<entry>([\s\S]*?)<\/entry>/g) || [];
+            return entries.map((entry) => {
+              const title =
+                entry.match(/<title>([\s\S]*?)<\/title>/)?.[1] || "";
+              const summary =
+                entry.match(/<summary>([\s\S]*?)<\/summary>/)?.[1] || "";
+              const published =
+                entry.match(/<published>([\s\S]*?)<\/published>/)?.[1] || "";
+              const id = entry.match(/<id>([\s\S]*?)<\/id>/)?.[1] || "";
+              // Extract categories
+              const categoryMatches =
+                entry.match(/<category term="([\s\S]*?)"/g) || [];
+              const categories = categoryMatches.map(
+                (cat) => cat.match(/<category term="([\s\S]*?)"/)?.[1] || ""
+              );
+
+              const category = determineCategory(categories);
+
+              return {
+                id: id.replace("http://arxiv.org/abs/", "arxiv-"),
+                title: title.replace(/\n/g, " ").trim(),
+                description: summary.replace(/\n/g, " ").trim(),
+                date: published,
+                category: category,
+                source: "arXiv",
+                sourceUrl: id,
+                type: "research",
+                significance: extractSignificance(summary),
+                // Use specific placeholder for category
+                image: placeholderImages[category] || defaultPlaceholder,
+              };
+            });
+          },
+        });
+      } catch (error) {
+        console.log("arXiv API error:", error);
+        arxivResponse = { data: [] };
+      }
+
+      try {
+        // Space News API for news articles
+        spacenewsResponse = await axios.get(
+          "https://api.spaceflightnewsapi.net/v4/articles",
+          {
+            params: {
+              limit: 8, // Reduced from 20
+              title_contains:
+                selectedCategory === "all" ? "discovery" : selectedCategory,
+              _sort: "publishedAt:DESC",
+            },
+            timeout: 5000,
+          }
+        );
+      } catch (error) {
+        console.log("SpaceNews API error:", error);
+        spacenewsResponse = { data: { results: [] } };
+      }
+
+      // Use the placeholder images defined earlier
+      // and the default placeholder for any missing categories
+
+      // Process NASA data with enhanced image handling
+      const nasaItems = nasaResponse.data.collection.items.map((item) => {
+        const data = item.data[0];
+        const category = determineCategory([data.keywords, data.title]);
+
+        // Prefer placeholders over potentially slow-loading NASA images
+        const imageUrl = placeholderImages[category] || defaultPlaceholder;
+
+        return {
+          id: `nasa-${data.nasa_id}`,
+          title: data.title,
+          description: data.description || "No description available",
+          date: data.date_created,
+          category: category,
+          image: imageUrl,
+          source: "NASA",
+          sourceUrl: `https://images.nasa.gov/details-${data.nasa_id}`,
+          type: "observation",
+          significance: extractSignificance(data.description),
+        };
+      });
+
+      // Process SpaceNews data
+      const newsItems = spacenewsResponse.data.results.map((article) => {
+        const category = determineCategory([article.title, article.summary]);
+        return {
+          id: `news-${article.id}`,
+          title: article.title,
+          description: article.summary,
+          date: article.publishedAt,
+          category: category,
+          // Use preset placeholders instead of potentially slow news images
+          image: placeholderImages[category] || defaultPlaceholder,
+          source: article.newsSite,
+          sourceUrl: article.url,
+          type: "news",
+          significance: extractSignificance(article.summary),
+        };
+      });
+
+      // Combine all sources - but limit the number of items to prevent overloading
+      // This helps reduce image loading issues
+      const combinedDiscoveries = [
+        ...nasaItems.slice(0, 8),
+        ...arxivResponse.data.slice(0, 8),
+        ...newsItems.slice(0, 8),
+      ].filter((item) => item.title && item.description); // Remove any incomplete items
+
+      // Sort by date (newest first)
+      const sortedDiscoveries = combinedDiscoveries.sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
+
+      setDiscoveries(sortedDiscoveries);
+      setHasMore(sortedDiscoveries.length >= 10);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching discoveries:", error);
+      setError("Failed to fetch discovery data. Please try again later.");
+      setLoading(false);
+    }
+  };
+
+  // Helper function to determine the category from various inputs
+  const determineCategory = (inputs) => {
+    const categoryMap = {
+      exoplanet: "Exoplanets",
+      planet: "Planetary Science",
+      "black hole": "Black Holes",
+      "gravitational wave": "Gravitational Waves",
+      nova: "Stellar Physics",
+      supernova: "Stellar Physics",
+      galaxy: "Galaxies",
+      star: "Stellar Physics",
+      asteroid: "Planetary Science",
+      comet: "Planetary Science",
+      mars: "Planetary Science",
+      jupiter: "Planetary Science",
+      moon: "Planetary Science",
+      cosmology: "Cosmology",
+      "astro-ph.CO": "Cosmology",
+      "astro-ph.EP": "Exoplanets",
+      "astro-ph.GA": "Galaxies",
+      "astro-ph.HE": "High Energy Astrophysics",
+      "astro-ph.IM": "Instrumentation",
+      "astro-ph.SR": "Stellar Physics",
+    };
+
+    // Flatten and join all inputs to search for keywords
+    const text = Array.isArray(inputs)
+      ? inputs.flat().join(" ").toLowerCase()
+      : inputs.toLowerCase();
+
+    for (const [keyword, category] of Object.entries(categoryMap)) {
+      if (text.includes(keyword)) {
+        return category;
+      }
+    }
+
+    return "Astrophysics"; // Default category
+  };
+
+  // Extract potential significance from text
+  const extractSignificance = (text) => {
+    if (!text) return "Recent astronomical discovery";
+
+    // Look for sentences containing significance indicators
+    const significanceKeywords = [
+      "first time",
+      "breakthrough",
+      "discovery",
+      "significant",
+      "important",
+      "reveals",
+      "new insight",
+      "unprecedented",
+      "revolution",
+      "milestone",
+      "unexpected",
+      "surprising",
+      "remarkable",
+    ];
+
+    // Extract sentences containing these keywords
+    const sentences = text.split(/\.\s+/);
+    const significantSentences = sentences.filter((sentence) => {
+      return significanceKeywords.some((keyword) =>
+        sentence.toLowerCase().includes(keyword)
+      );
+    });
+
+    if (significantSentences.length > 0) {
+      // Use the first significant sentence found
+      return significantSentences[0].trim() + ".";
+    }
+
+    // Fallback: take the first sentence and add a period if needed
+    const firstSentence =
+      sentences[0]?.trim() || "Recent astronomical discovery";
+    return firstSentence.endsWith(".") ? firstSentence : firstSentence + ".";
+  };
 
   const filterDiscoveries = (category) => {
     setSelectedCategory(category);
@@ -324,34 +322,39 @@ const DiscoveriesPage = () => {
       const matchesSearch =
         discovery.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         discovery.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory =
-        selectedCategory === "all" || discovery.category === selectedCategory;
-      return matchesSearch && matchesCategory;
+
+      return matchesSearch;
     });
   };
 
+  const loadMore = () => {
+    setPage((prev) => prev + 1);
+    fetchDiscoveries();
+  };
+
+  // Get unique categories from actual data
   const getUniqueCategories = () => {
     if (!discoveries || discoveries.length === 0) {
-      return ["all"];
+      // Default categories if no data yet
+      return [
+        "all",
+        "Exoplanets",
+        "Black Holes",
+        "Galaxies",
+        "Stellar Physics",
+        "Planetary Science",
+        "Cosmology",
+        "Gravitational Waves",
+        "Astrophysics",
+      ];
     }
+
     const categories = new Set(
       discoveries.map((discovery) => discovery.category)
     );
+
     return ["all", ...Array.from(categories).sort()];
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex justify-center items-center bg-black">
-        <div className="space-y-4 flex flex-col items-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-blue-500 text-lg">
-            Loading astronomical discoveries...
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   const filteredDiscoveries = getFilteredDiscoveries();
 
@@ -407,7 +410,7 @@ const DiscoveriesPage = () => {
                   : "bg-gray-800 text-gray-300 hover:bg-gray-700"
               }`}
             >
-              {category.charAt(0).toUpperCase() + category.slice(1)}
+              {category === "all" ? "All Categories" : category}
             </button>
           ))}
         </div>
@@ -415,100 +418,182 @@ const DiscoveriesPage = () => {
 
       {/* Status Section */}
       <div className="max-w-7xl mx-auto px-4 py-4">
-        <p className="text-gray-400">
-          Displaying {filteredDiscoveries.length} discoveries
-          {selectedCategory !== "all" && ` in ${selectedCategory}`}
-          {searchQuery && ` matching "${searchQuery}"`}
-        </p>
+        <div className="flex justify-between items-center">
+          <p className="text-gray-400">
+            Displaying {filteredDiscoveries.length} discoveries
+            {selectedCategory !== "all" && ` in ${selectedCategory}`}
+            {searchQuery && ` matching "${searchQuery}"`}
+          </p>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => fetchDiscoveries()}
+              className="flex items-center gap-1 text-blue-400 hover:text-blue-300 bg-blue-900/20 px-3 py-1 rounded-lg"
+              disabled={loading}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              Refresh Data
+            </button>
+          </div>
+        </div>
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="max-w-7xl mx-auto px-4 mb-8">
+          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 flex items-start">
+            <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5 mr-3 flex-shrink-0" />
+            <p className="text-red-400">{error}</p>
+          </div>
+        </div>
+      )}
 
       {/* Discoveries Grid */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredDiscoveries.map((discovery, index) => (
-            <motion.article
-              key={discovery.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="group bg-gray-900/50 backdrop-blur-md rounded-lg overflow-hidden border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300"
-            >
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src={discovery.image}
-                  alt={discovery.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  onError={(e) => {
-                    e.target.src = "/api/placeholder/400/300";
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className="flex justify-between items-center">
-                    <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
-                      {discovery.category}
-                    </span>
-                    <span className="text-sm text-gray-300 flex items-center">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      {new Date(discovery.date).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-6">
-                <h2 className="text-xl font-bold mb-4 line-clamp-2">
-                  {discovery.title}
-                </h2>
-                <p className="text-gray-400 mb-6 line-clamp-3">
-                  {discovery.description}
-                </p>
-
-                <div className="bg-black/30 p-4 rounded-lg mb-6">
-                  <h4 className="text-sm font-semibold text-blue-400 mb-2 flex items-center">
-                    <Star className="w-4 h-4 mr-2" />
-                    Scientific Significance
-                  </h4>
-                  <p className="text-sm text-gray-300">
-                    {discovery.significance}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between mt-6">
-                  <span className="text-sm text-gray-400 flex items-center">
-                    <Globe className="w-4 h-4 mr-2" />
-                    {discovery.source}
-                  </span>
-                  <a
-                    href={discovery.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors text-sm"
-                  >
-                    Read More
-                    <ExternalLink className="w-4 h-4 ml-1" />
-                  </a>
-                </div>
-              </div>
-            </motion.article>
-          ))}
-        </div>
-
-        {filteredDiscoveries.length === 0 && (
-          <div className="bg-gray-900/30 rounded-lg p-12 text-center">
-            <p className="text-gray-400 text-xl">
-              No discoveries found matching your criteria
-            </p>
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedCategory("all");
-              }}
-              className="mt-4 px-6 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white transition-colors"
-            >
-              Reset Filters
-            </button>
+        {loading && discoveries.length === 0 ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="space-y-4 text-center">
+              <Loader className="w-12 h-12 text-blue-500 animate-spin mx-auto" />
+              <p className="text-blue-400">Fetching latest discoveries...</p>
+            </div>
           </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredDiscoveries.map((discovery, index) => (
+                <motion.article
+                  key={discovery.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="group bg-gray-900/50 backdrop-blur-md rounded-lg overflow-hidden border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300"
+                >
+                  <div className="relative h-48 overflow-hidden bg-gray-800">
+                    {/* Fixed aspect ratio container with background */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent z-10" />
+
+                    {/* Image with loading state - preserve position regardless of image loading */}
+                    <div className="absolute inset-0 bg-gray-800/80">
+                      <img
+                        src={discovery.image}
+                        alt={discovery.title}
+                        className="w-full h-full object-cover opacity-0 transition-opacity duration-300"
+                        onError={(e) => {
+                          e.target.src = "/api/placeholder/400/300";
+                        }}
+                        onLoad={(e) => {
+                          e.target.classList.remove("opacity-0");
+                          e.target.classList.add("opacity-100");
+                        }}
+                        loading="lazy"
+                      />
+                    </div>
+
+                    {/* Overlay content positioning unchanged */}
+                    <div className="absolute bottom-4 left-4 right-4 z-20">
+                      <div className="flex justify-between items-center">
+                        <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
+                          {discovery.category}
+                        </span>
+                        <span className="text-sm text-gray-300 flex items-center">
+                          <Calendar className="w-4 h-4 mr-2" />
+                          {new Date(discovery.date).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6">
+                    <h2 className="text-xl font-bold mb-4 line-clamp-2">
+                      {discovery.title}
+                    </h2>
+                    <p className="text-gray-400 mb-6 line-clamp-3">
+                      {discovery.description}
+                    </p>
+
+                    <div className="bg-black/30 p-4 rounded-lg mb-6">
+                      <h4 className="text-sm font-semibold text-blue-400 mb-2 flex items-center">
+                        <Star className="w-4 h-4 mr-2" />
+                        Scientific Significance
+                      </h4>
+                      <p className="text-sm text-gray-300">
+                        {discovery.significance}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-6">
+                      <span className="text-sm text-gray-400 flex items-center">
+                        <Globe className="w-4 h-4 mr-2" />
+                        {discovery.source}
+                      </span>
+                      <a
+                        href={discovery.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors text-sm"
+                      >
+                        Read More
+                        <ExternalLink className="w-4 h-4 ml-1" />
+                      </a>
+                    </div>
+                  </div>
+                </motion.article>
+              ))}
+            </div>
+
+            {/* Load More Button */}
+            {hasMore && filteredDiscoveries.length > 0 && (
+              <div className="flex justify-center mt-12">
+                <button
+                  onClick={loadMore}
+                  disabled={loading}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors flex items-center"
+                >
+                  {loading ? (
+                    <>
+                      <Loader className="w-4 h-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      Load More Discoveries
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {filteredDiscoveries.length === 0 && !loading && (
+              <div className="bg-gray-900/30 rounded-lg p-12 text-center">
+                <p className="text-gray-400 text-xl">
+                  No discoveries found matching your criteria
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedCategory("all");
+                  }}
+                  className="mt-4 px-6 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white transition-colors"
+                >
+                  Reset Filters
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
