@@ -6,376 +6,490 @@ import {
   Calendar,
   MapPin,
   Activity,
-  Server,
   ArrowLeft,
   ExternalLink,
   Award,
   Clock,
   Zap,
+  Server,
+  AlertTriangle,
+  Search,
+  Filter,
 } from "lucide-react";
+
+// Import the InstrumentObservations component
+import InstrumentObservations from "../components/instruments/InstrumentObservations";
 
 const InstrumentDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [instrument, setInstrument] = useState(null);
-  const [observations, setObservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [relatedArticles, setRelatedArticles] = useState([]);
 
   useEffect(() => {
     const fetchInstrumentDetails = async () => {
       try {
         setLoading(true);
 
-        // Try to fetch from the actual API endpoint
-        try {
-          const response = await axios.get(
-            `https://space-mgph.onrender.com/api/instruments/${id}`
-          );
-          const instrumentData = response.data.data || response.data;
-          setInstrument(instrumentData);
-
-          // Fetch observations for this instrument
-          fetchObservations(instrumentData.name, instrumentData.type);
-        } catch (apiError) {
-          console.log("Could not fetch from API, using fallback data");
-
-          // Fallback data for demonstration if API fails
-          const fallbackInstruments = [
-            {
-              _id: "1",
-              name: "James Webb Space Telescope",
-              type: "Telescope",
-              status: "Active",
-              location: "L2 Orbit",
-              discoveryDate: "2021-12-25",
-              description:
-                "The largest and most powerful space telescope ever built, designed to study the universe in infrared light. It can observe objects up to 100 times fainter than Hubble can see. With its 6.5-meter gold-coated primary mirror and suite of infrared instruments, JWST is unveiling the earliest galaxies, star formation hidden within dusty clouds, and the atmospheres of distant exoplanets.",
-              specifications: {
-                dimensions: {
-                  length: 20.197,
-                  width: 14.162,
-                  height: 8.4,
-                  unit: "m",
-                },
-                weight: { value: 6200, unit: "kg" },
-                powerSource: "Solar Array",
-                operatingWavelength: "0.6-28.3 micrometers",
-                cost: "$9.7 billion",
-                primaryMirror: "6.5 meters diameter (21.7 feet)",
-                orbitLocation: "L2 Lagrange point, 1.5 million km from Earth",
+        // Base instruments data for fallback
+        const baseInstruments = [
+          {
+            _id: "1",
+            name: "James Webb Space Telescope",
+            type: "Telescope",
+            status: "Active",
+            location: "L2 Orbit",
+            discoveryDate: "2021-12-25",
+            description:
+              "The largest and most powerful space telescope ever built, designed to study the universe in infrared light. It can observe objects up to 100 times fainter than Hubble can see. With its 6.5-meter gold-coated primary mirror and suite of infrared instruments, JWST is unveiling the earliest galaxies, star formation hidden within dusty clouds, and the atmospheres of distant exoplanets.",
+            specifications: {
+              dimensions: {
+                length: 20.197,
+                width: 14.162,
+                height: 8.4,
+                unit: "m",
               },
-              mission: {
-                name: "JWST Mission",
-                agency: "NASA/ESA/CSA",
-                launchVehicle: "Ariane 5 ECA",
-                launchSite: "Kourou, French Guiana",
-                objectives: [
-                  "Study first light and reionization after the Big Bang",
-                  "Assembly of galaxies in the early universe",
-                  "Birth of stars and protoplanetary systems",
-                  "Planetary systems and origins of life",
-                  "Detailed exoplanet atmosphere characterization",
-                ],
-              },
-              image:
-                "https://cdn.mos.cms.futurecdn.net/NQRzVz58E3xE3i4Jvopew5.jpg",
+              weight: { value: 6200, unit: "kg" },
+              powerSource: "Solar Array",
+              operatingWavelength: "0.6-28.3 micrometers",
+              cost: "$9.7 billion",
+              primaryMirror: "6.5 meters diameter (21.7 feet)",
+              orbitLocation: "L2 Lagrange point, 1.5 million km from Earth",
             },
-            {
-              _id: "2",
-              name: "Perseverance Rover",
-              type: "Rover",
-              status: "Active",
-              location: "Mars",
-              discoveryDate: "2021-02-18",
-              description:
-                "Part of NASA's Mars 2020 mission, Perseverance is searching for signs of ancient microbial life and collecting samples of Martian rock and regolith for a potential return to Earth. The car-sized rover features advanced instruments including the Ingenuity helicopter demonstration and the MOXIE experiment to produce oxygen from the Martian atmosphere.",
-              specifications: {
-                dimensions: { length: 3, width: 2.7, height: 2.2, unit: "m" },
-                weight: { value: 1025, unit: "kg" },
-                powerSource: "Radioisotope Thermoelectric Generator",
-                maxSpeed: "0.152 km/h",
-                communicationSystem: "UHF and X-band direct-to-Earth",
-                instruments:
-                  "MEDA, MOXIE, PIXL, RIMFAX, SHERLOC, SuperCam, Mastcam-Z",
-              },
-              mission: {
-                name: "Mars 2020",
-                agency: "NASA",
-                launchVehicle: "Atlas V 541",
-                launchSite: "Cape Canaveral SLC-41",
-                objectives: [
-                  "Search for signs of ancient microbial life",
-                  "Characterize the geology and climate of Mars",
-                  "Collect and cache Martian rock and regolith samples",
-                  "Test oxygen production from the Martian atmosphere",
-                  "Demonstrate technology for future robotic and human missions",
-                ],
-                landingSite: "Jezero Crater",
-              },
-              image:
-                "https://mars.nasa.gov/layout/mars2020/images/PIA23764-RoverNamePlateonMars-web.jpg",
+            mission: {
+              name: "JWST Mission",
+              agency: "NASA/ESA/CSA",
+              launchVehicle: "Ariane 5 ECA",
+              launchSite: "Kourou, French Guiana",
+              objectives: [
+                "Study first light and reionization after the Big Bang",
+                "Assembly of galaxies in the early universe",
+                "Birth of stars and protoplanetary systems",
+                "Planetary systems and origins of life",
+                "Detailed exoplanet atmosphere characterization",
+              ],
             },
-            {
-              _id: "3",
+            image:
+              "https://cdn.mos.cms.futurecdn.net/NQRzVz58E3xE3i4Jvopew5.jpg",
+          },
+          {
+            _id: "2",
+            name: "Perseverance Rover",
+            type: "Rover",
+            status: "Active",
+            location: "Mars",
+            discoveryDate: "2021-02-18",
+            description:
+              "Part of NASA's Mars 2020 mission, Perseverance is searching for signs of ancient microbial life and collecting samples of Martian rock and regolith for a potential return to Earth. The car-sized rover features advanced instruments including the Ingenuity helicopter demonstration and the MOXIE experiment to produce oxygen from the Martian atmosphere.",
+            specifications: {
+              dimensions: { length: 3, width: 2.7, height: 2.2, unit: "m" },
+              weight: { value: 1025, unit: "kg" },
+              powerSource: "Radioisotope Thermoelectric Generator",
+              maxSpeed: "0.152 km/h",
+              communicationSystem: "UHF and X-band direct-to-Earth",
+              instruments:
+                "MEDA, MOXIE, PIXL, RIMFAX, SHERLOC, SuperCam, Mastcam-Z",
+            },
+            mission: {
+              name: "Mars 2020",
+              agency: "NASA",
+              launchVehicle: "Atlas V 541",
+              launchSite: "Cape Canaveral SLC-41",
+              objectives: [
+                "Search for signs of ancient microbial life",
+                "Characterize the geology and climate of Mars",
+                "Collect and cache Martian rock and regolith samples",
+                "Test oxygen production from the Martian atmosphere",
+                "Demonstrate technology for future robotic and human missions",
+              ],
+              landingSite: "Jezero Crater",
+            },
+            image:
+              "https://mars.nasa.gov/layout/mars2020/images/PIA23764-RoverNamePlateonMars-web.jpg",
+          },
+          {
+            _id: "3",
+            name: "Hubble Space Telescope",
+            type: "Telescope",
+            status: "Active",
+            location: "Low Earth Orbit",
+            discoveryDate: "1990-04-24",
+            description:
+              "One of NASA's most successful and long-lasting space missions, Hubble has revolutionized our understanding of the universe with its deep field observations and detailed images of distant galaxies. Over its three-decade operational lifetime, Hubble has made more than 1.4 million observations, generated over 150 terabytes of data, and featured in over 18,000 scientific papers.",
+            specifications: {
+              dimensions: {
+                length: 13.2,
+                width: 4.2,
+                height: 4.2,
+                unit: "m",
+              },
+              weight: { value: 11110, unit: "kg" },
+              powerSource: "Solar Arrays",
+              operatingWavelength: "0.1-0.8 micrometers",
+              orbitHeight: "547 km",
+              primaryMirror: "2.4 meters diameter",
+              instruments: "ACS, COS, FGS, STIS, WFC3",
+            },
+            mission: {
               name: "Hubble Space Telescope",
-              type: "Telescope",
-              status: "Active",
-              location: "Low Earth Orbit",
-              discoveryDate: "1990-04-24",
-              description:
-                "One of NASA's most successful and long-lasting space missions, Hubble has revolutionized our understanding of the universe with its deep field observations and detailed images of distant galaxies. Over its three-decade operational lifetime, Hubble has made more than 1.4 million observations, generated over 150 terabytes of data, and featured in over 18,000 scientific papers.",
-              specifications: {
-                dimensions: {
-                  length: 13.2,
-                  width: 4.2,
-                  height: 4.2,
-                  unit: "m",
-                },
-                weight: { value: 11110, unit: "kg" },
-                powerSource: "Solar Arrays",
-                operatingWavelength: "0.1-0.8 micrometers",
-                orbitHeight: "547 km",
-                primaryMirror: "2.4 meters diameter",
-                instruments: "ACS, COS, FGS, STIS, WFC3",
-              },
-              mission: {
-                name: "Hubble Space Telescope",
-                agency: "NASA/ESA",
-                launchVehicle: "Space Shuttle Discovery (STS-31)",
-                objectives: [
-                  "Study distant galaxies and quasars",
-                  "Measure the expansion rate of the universe",
-                  "Observe the life cycles of stars",
-                  "Study planetary atmospheres within our solar system",
-                  "Look for supermassive black holes",
-                ],
-                servicingMissions: 5,
-              },
-              image:
-                "https://www.nasa.gov/sites/default/files/thumbnails/image/hubble_2009.jpg",
+              agency: "NASA/ESA",
+              launchVehicle: "Space Shuttle Discovery (STS-31)",
+              objectives: [
+                "Study distant galaxies and quasars",
+                "Measure the expansion rate of the universe",
+                "Observe the life cycles of stars",
+                "Study planetary atmospheres within our solar system",
+                "Look for supermassive black holes",
+              ],
+              servicingMissions: 5,
             },
-          ];
+            image:
+              "https://www.nasa.gov/sites/default/files/thumbnails/image/hubble_2009.jpg",
+          },
+          {
+            _id: "4",
+            name: "GPS IIF",
+            type: "Satellite",
+            status: "Active",
+            location: "MEO",
+            discoveryDate: "2010-05-27",
+            description:
+              "The Global Positioning System (GPS) Block IIF satellites are part of the operational constellation providing precise positioning, navigation, and timing services worldwide for both civilian and military users. These advanced satellites offer improved accuracy, stronger signals, and enhanced capabilities compared to previous generations.",
+            specifications: {
+              dimensions: {
+                length: 4.6,
+                width: 2.5,
+                height: 2.0,
+                unit: "m",
+              },
+              weight: { value: 1630, unit: "kg" },
+              powerSource: "Solar Arrays with Nickel-Hydrogen Batteries",
+              operationalLife: "12+ years",
+              orbit: "20,200 km circular, 55° inclination",
+              signalTypes: "L1, L2, L5",
+            },
+            mission: {
+              name: "Global Positioning System",
+              agency: "U.S. Space Force",
+              launchVehicle: "Delta IV/Atlas V",
+              objectives: [
+                "Provide global positioning services",
+                "Support military operations",
+                "Enable civilian navigation applications",
+                "Deliver precise timing signals worldwide",
+                "Support search and rescue operations",
+              ],
+            },
+            image: "https://www.gps.gov/multimedia/images/constellation.jpg",
+          },
+          {
+            _id: "5",
+            name: "Chandra X-ray Observatory",
+            type: "Observatory",
+            status: "Active",
+            location: "Elliptical Orbit",
+            discoveryDate: "1999-07-23",
+            description:
+              "NASA's flagship X-ray telescope, Chandra observes extremely hot regions of the universe such as exploded stars, clusters of galaxies, and matter surrounding black holes. With its unparalleled X-ray vision, Chandra has revolutionized our understanding of high-energy cosmic phenomena and the invisible universe.",
+            specifications: {
+              dimensions: {
+                length: 13.8,
+                width: 4.2,
+                height: 4.2,
+                unit: "m",
+              },
+              weight: { value: 4790, unit: "kg" },
+              powerSource: "Solar Arrays",
+              operatingWavelength: "0.1-10 keV (X-ray)",
+              orbitApogee: "139,000 km",
+              orbitPerigee: "16,000 km",
+              instruments: "ACIS, HRC, LETG, HETG",
+            },
+            mission: {
+              name: "Chandra X-ray Observatory",
+              agency: "NASA",
+              launchVehicle: "Space Shuttle Columbia (STS-93)",
+              objectives: [
+                "Study high-energy astrophysical phenomena",
+                "Observe black holes and quasars",
+                "Examine galaxy clusters and dark matter",
+                "Investigate stellar evolution and supernovae",
+                "Map hot gas in the universe",
+              ],
+            },
+            image:
+              "https://upload.wikimedia.org/wikipedia/commons/f/fd/Chandra_artist_illustration.jpg",
+          },
+          {
+            _id: "6",
+            name: "GOES-18",
+            type: "Satellite",
+            status: "Active",
+            location: "Geostationary Orbit",
+            discoveryDate: "2022-03-01",
+            description:
+              "GOES-18 (formerly GOES-T) is part of the GOES-R Series of advanced weather satellites operated by NOAA. It monitors Earth's atmosphere, weather patterns, oceans, and environment, providing critical data for weather forecasting, climate monitoring, and space weather prediction.",
+            specifications: {
+              dimensions: {
+                length: 6.1,
+                width: 5.6,
+                height: 3.9,
+                unit: "m",
+              },
+              weight: { value: 5192, unit: "kg" },
+              powerSource: "Solar Arrays",
+              orbitHeight: "35,786 km",
+              location: "137° West Longitude",
+              instruments: "ABI, GLM, SUVI, EXIS, SEISS, MAG",
+            },
+            mission: {
+              name: "Geostationary Operational Environmental Satellite",
+              agency: "NOAA/NASA",
+              launchVehicle: "Atlas V 541",
+              launchSite: "Cape Canaveral SLC-41",
+              objectives: [
+                "Provide continuous weather imagery and monitoring",
+                "Track severe storms and hurricanes",
+                "Detect and monitor wildfires",
+                "Monitor space weather and solar activity",
+                "Support search and rescue operations",
+              ],
+            },
+            image:
+              "https://www.nesdis.noaa.gov/sites/default/files/assets/images/goes-r_primary.jpg",
+          },
+          {
+            _id: "7",
+            name: "InSight Lander",
+            type: "Lander",
+            status: "Inactive",
+            location: "Mars",
+            discoveryDate: "2018-05-05",
+            description:
+              "The Interior Exploration using Seismic Investigations, Geodesy and Heat Transport (InSight) mission is a robotic lander designed to study the deep interior of Mars. InSight's measurements help scientists understand the formation and evolution of terrestrial planets by investigating the processes that shaped the rocky planets of the inner solar system.",
+            specifications: {
+              dimensions: {
+                length: 6.0,
+                width: 2.7,
+                height: 1.0,
+                unit: "m",
+              },
+              weight: { value: 358, unit: "kg" },
+              powerSource: "Solar Arrays",
+              landingSite: "Elysium Planitia",
+              instruments: "SEIS, HP3, RISE, IDC, ICC",
+            },
+            mission: {
+              name: "InSight Mars Lander",
+              agency: "NASA",
+              launchVehicle: "Atlas V 401",
+              launchSite: "Vandenberg SFB",
+              objectives: [
+                "Study the internal structure of Mars",
+                "Measure Martian seismic activity",
+                "Measure the planet's heat flow",
+                "Track the wobble of Mars' rotation",
+                "Understand planetary formation",
+              ],
+            },
+            image:
+              "https://d2pn8kiwq2w21t.cloudfront.net/original_images/missionswebPIA22743-16_vD6Nx99.jpg",
+          },
+          {
+            _id: "8",
+            name: "SMAP",
+            type: "Observatory",
+            status: "Active",
+            location: "Low Earth Orbit",
+            discoveryDate: "2015-01-31",
+            description:
+              "The Soil Moisture Active Passive (SMAP) satellite measures the amount of water in the top 5 cm of soil everywhere on Earth's surface. This data helps improve our understanding of water, carbon, and energy cycles, enhance weather and climate forecasts, and develop better flood prediction and drought monitoring capabilities.",
+            specifications: {
+              dimensions: {
+                diameter: 6.0, // Reflector antenna
+                height: 2.5,
+                unit: "m",
+              },
+              weight: { value: 944, unit: "kg" },
+              powerSource: "Solar Arrays",
+              orbitHeight: "685 km",
+              instruments: "L-band Radiometer, Radar (failed after 3 months)",
+            },
+            mission: {
+              name: "Soil Moisture Active Passive",
+              agency: "NASA",
+              launchVehicle: "Delta II 7320-10C",
+              launchSite: "Vandenberg SFB",
+              objectives: [
+                "Map global soil moisture",
+                "Determine freeze/thaw state of soils",
+                "Improve weather and climate forecasts",
+                "Enhance flood prediction and drought monitoring",
+                "Support agricultural productivity research",
+              ],
+            },
+            image:
+              "https://smap.jpl.nasa.gov/system/resources/detail_files/189_SMAP_DuskLaunch_hires.jpg",
+          },
+        ];
 
-          const selectedInstrument =
-            fallbackInstruments.find((inst) => inst._id === id) ||
-            fallbackInstruments[0];
-          setInstrument(selectedInstrument);
+        // Find the instrument by id
+        let selectedInstrument = baseInstruments.find(
+          (inst) => inst._id === id
+        );
 
-          // Fetch observations for this instrument
-          fetchObservations(selectedInstrument.name, selectedInstrument.type);
+        if (!selectedInstrument) {
+          // For news-based instruments, we need to fetch them again
+          if (id.startsWith("news-")) {
+            try {
+              const articleId = id.replace("news-", "");
+              const response = await axios.get(
+                `https://api.spaceflightnewsapi.net/v4/articles/${articleId}`
+              );
+              const article = response.data;
+
+              // Create an instrument from news article
+              selectedInstrument = {
+                _id: id,
+                name: article.title.split(":")[0] || article.title, // Use first part of title as name
+                type: determineType(article.title),
+                status: "Active",
+                location: determineLocation(article.title),
+                discoveryDate: article.published_at,
+                description: article.summary,
+                image: article.image_url,
+                specifications: {
+                  // Default specs for news-based instruments
+                  powerSource: "Unknown",
+                  dimensions: {
+                    length: "Unknown",
+                    width: "Unknown",
+                    height: "Unknown",
+                  },
+                },
+                mission: {
+                  name: article.title,
+                  agency: article.news_site,
+                  objectives: ["Information not available"],
+                },
+              };
+            } catch (error) {
+              console.error("Error fetching news article:", error);
+              setError("Could not find instrument details.");
+            }
+          } else {
+            setError("Instrument not found");
+          }
         }
+
+        // Also fetch related news articles
+        try {
+          const newsResponse = await axios.get(
+            `https://api.spaceflightnewsapi.net/v4/articles?title_contains=${
+              selectedInstrument.name.split(" ")[0]
+            }&limit=4`
+          );
+          setRelatedArticles(newsResponse.data.results);
+        } catch (error) {
+          console.log("Could not fetch related articles");
+        }
+
+        if (selectedInstrument) {
+          setInstrument(selectedInstrument);
+        }
+
+        setLoading(false);
       } catch (err) {
-        setError(err.message);
+        console.error("Error in fetchInstrumentDetails:", err);
+        setError("Error loading instrument details");
         setLoading(false);
       }
-    };
-
-    const fetchObservations = async (name, type) => {
-      try {
-        // Try to fetch real observations if possible
-        if (
-          name.toLowerCase().includes("webb") ||
-          name.toLowerCase().includes("james webb")
-        ) {
-          try {
-            const response = await axios.get(
-              "https://images-api.nasa.gov/search?q=james+webb&media_type=image&year_start=2022"
-            );
-            const observationsData = response.data.collection.items
-              .slice(0, 6)
-              .map((item) => {
-                const data = item.data[0];
-                return {
-                  id: data.nasa_id,
-                  title: data.title,
-                  date: data.date_created,
-                  description:
-                    data.description ||
-                    "Deep space observation by James Webb Space Telescope",
-                  imageUrl: item.links?.[0]?.href || "/api/placeholder/400/300",
-                  type: "image",
-                  significance:
-                    "This observation reveals new details about cosmic structures and star formation.",
-                  published: true,
-                };
-              });
-            setObservations(observationsData);
-            setLoading(false);
-          } catch (err) {
-            generateFallbackObservations(name, type);
-          }
-        } else if (name.toLowerCase().includes("hubble")) {
-          try {
-            const response = await axios.get(
-              "https://images-api.nasa.gov/search?q=hubble&media_type=image&year_start=2020"
-            );
-            const observationsData = response.data.collection.items
-              .slice(0, 6)
-              .map((item) => {
-                const data = item.data[0];
-                return {
-                  id: data.nasa_id,
-                  title: data.title,
-                  date: data.date_created,
-                  description:
-                    data.description ||
-                    "Deep space observation by Hubble Space Telescope",
-                  imageUrl: item.links?.[0]?.href || "/api/placeholder/400/300",
-                  type: "image",
-                  significance:
-                    "This image helps astronomers understand the evolution of galaxies and stellar objects.",
-                  published: true,
-                };
-              });
-            setObservations(observationsData);
-            setLoading(false);
-          } catch (err) {
-            generateFallbackObservations(name, type);
-          }
-        } else if (
-          name.toLowerCase().includes("perseverance") ||
-          name.toLowerCase().includes("mars")
-        ) {
-          try {
-            const response = await axios.get(
-              "https://images-api.nasa.gov/search?q=perseverance+mars&media_type=image&year_start=2021"
-            );
-            const observationsData = response.data.collection.items
-              .slice(0, 6)
-              .map((item) => {
-                const data = item.data[0];
-                return {
-                  id: data.nasa_id,
-                  title: data.title,
-                  date: data.date_created,
-                  description:
-                    data.description ||
-                    "Surface observation by Perseverance rover",
-                  imageUrl: item.links?.[0]?.href || "/api/placeholder/400/300",
-                  type: "image",
-                  significance:
-                    "This image provides insights into Martian geology and potential signs of past microbial life.",
-                  published: true,
-                };
-              });
-            setObservations(observationsData);
-            setLoading(false);
-          } catch (err) {
-            generateFallbackObservations(name, type);
-          }
-        } else {
-          generateFallbackObservations(name, type);
-        }
-      } catch (error) {
-        generateFallbackObservations(name, type);
-      }
-    };
-
-    const generateFallbackObservations = (name, type) => {
-      // Generate fake data based on instrument type
-      const now = new Date();
-      const sampleData = [];
-
-      const observationTypes =
-        type === "Telescope"
-          ? [
-              "Deep field observation",
-              "Spectroscopic analysis",
-              "Exoplanet transit",
-              "Nebula imaging",
-            ]
-          : type === "Rover"
-          ? [
-              "Surface sample",
-              "Geological analysis",
-              "Weather recording",
-              "Panoramic imaging",
-            ]
-          : [
-              "Data collection",
-              "Environmental recording",
-              "Signal transmission",
-              "Status update",
-            ];
-
-      for (let i = 0; i < 6; i++) {
-        const date = new Date();
-        date.setDate(now.getDate() - i * 30); // One observation per month back in time
-
-        const observationType =
-          observationTypes[Math.floor(Math.random() * observationTypes.length)];
-        const isHistorical = i > 2;
-
-        sampleData.push({
-          id: `obs-${Date.now()}-${i}`,
-          title: `${observationType} #${i + 1}`,
-          date: date.toISOString(),
-          description: `This ${observationType.toLowerCase()} by ${name} ${
-            isHistorical ? "revealed" : "is monitoring"
-          } important data about ${
-            type === "Telescope"
-              ? "the cosmos"
-              : type === "Rover"
-              ? "the planetary surface"
-              : "its environment"
-          }.`,
-          imageUrl: `/api/placeholder/${400 + i}/${300 + i}`,
-          type: Math.random() > 0.3 ? "image" : "data",
-          significance: isHistorical
-            ? "This observation changed our understanding significantly"
-            : "Ongoing data collection for long-term study",
-          published: Math.random() > 0.2,
-        });
-      }
-
-      setObservations(sampleData);
-      setLoading(false);
     };
 
     fetchInstrumentDetails();
   }, [id]);
 
-  if (loading)
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
+  // Helper functions for news-based instruments
+  const determineType = (title) => {
+    title = title.toLowerCase();
+    if (title.includes("telescope")) return "Telescope";
+    if (title.includes("rover")) return "Rover";
+    if (title.includes("satellite")) return "Satellite";
+    if (title.includes("observatory")) return "Observatory";
+    if (title.includes("lander")) return "Lander";
+    return "Instrument";
+  };
 
-  if (error)
+  const determineLocation = (title) => {
+    title = title.toLowerCase();
+    if (title.includes("mars")) return "Mars";
+    if (title.includes("lunar") || title.includes("moon")) return "Moon";
+    if (title.includes("l2")) return "L2 Orbit";
+    if (title.includes("orbit")) return "Earth Orbit";
+    return "Space";
+  };
+
+  if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 bg-gray-900 min-h-screen">
-        <div
-          className="bg-red-900/20 border border-red-500/30 text-red-400 px-4 py-3 rounded relative"
-          role="alert"
-        >
-          <strong className="font-bold">Error: </strong>
-          <span className="block sm:inline">{error}</span>
+      <div className="min-h-screen flex justify-center items-center bg-black">
+        <div className="space-y-4 flex flex-col items-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-blue-500 text-lg">Loading instrument details...</p>
         </div>
       </div>
     );
+  }
 
-  if (!instrument)
+  if (error) {
     return (
-      <div className="container mx-auto px-4 py-8 bg-gray-900 min-h-screen">
-        <div className="text-center text-gray-500">No instrument found</div>
+      <div className="min-h-screen flex justify-center items-center bg-black">
+        <div className="bg-red-600/10 p-6 rounded-lg border border-red-500 max-w-lg text-center">
+          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <p className="text-red-500 text-xl mb-4">{error}</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Instruments
+          </button>
+        </div>
       </div>
     );
+  }
+
+  if (!instrument) {
+    return (
+      <div className="min-h-screen flex justify-center items-center bg-black">
+        <div className="text-center text-gray-500">
+          <Server className="w-16 h-16 mx-auto mb-4 opacity-50" />
+          <p className="text-xl mb-4">No instrument data found</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Instruments
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-gray-900 min-h-screen text-white pt-20">
+    <div className="min-h-screen bg-black text-white pt-20">
       {/* Hero Section */}
       <div className="relative h-[50vh] flex items-center justify-center">
         <div
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0 bg-cover bg-center opacity-40"
           style={{
             backgroundImage: `url(${instrument.image})`,
-            opacity: 0.4,
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black"></div>
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -470,6 +584,18 @@ const InstrumentDetails = () => {
             >
               Mission
             </button>
+            {relatedArticles.length > 0 && (
+              <button
+                onClick={() => setActiveTab("news")}
+                className={`px-5 py-4 transition-colors ${
+                  activeTab === "news"
+                    ? "text-blue-400 border-b-2 border-blue-400"
+                    : "text-gray-400 hover:text-gray-300 hover:bg-gray-700/30"
+                }`}
+              >
+                Related News
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -659,7 +785,15 @@ const InstrumentDetails = () => {
                               Dimensions
                             </p>
                             <p className="text-white">
-                              {`${instrument.specifications.dimensions.length} × ${instrument.specifications.dimensions.width} × ${instrument.specifications.dimensions.height} ${instrument.specifications.dimensions.unit}`}
+                              {`${
+                                instrument.specifications.dimensions.length
+                              } × ${
+                                instrument.specifications.dimensions.width
+                              } × ${
+                                instrument.specifications.dimensions.height
+                              } ${
+                                instrument.specifications.dimensions.unit || ""
+                              }`}
                             </p>
                           </div>
                         </div>
@@ -805,88 +939,11 @@ const InstrumentDetails = () => {
           )}
 
           {activeTab === "observations" && (
-            <div>
-              <h2 className="text-2xl font-light mb-8 pb-4 border-b border-gray-700/50">
-                Observations & Discoveries
-              </h2>
-
-              {observations.length > 0 ? (
-                <div className="space-y-8">
-                  {observations.map((observation, index) => (
-                    <motion.div
-                      key={observation.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                      className="bg-gray-900/50 rounded-xl overflow-hidden border border-gray-800/50"
-                    >
-                      <div className="md:flex">
-                        {observation.type === "image" &&
-                          observation.imageUrl && (
-                            <div className="md:w-2/5 h-60 md:h-auto relative">
-                              <img
-                                src={observation.imageUrl}
-                                alt={observation.title}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.target.src = "/api/placeholder/400/300";
-                                }}
-                              />
-                            </div>
-                          )}
-
-                        <div className="p-6 md:w-3/5">
-                          <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
-                            <h3 className="text-xl font-medium">
-                              {observation.title}
-                            </h3>
-                            <div className="flex items-center text-sm text-gray-400">
-                              <Calendar className="w-4 h-4 mr-1" />
-                              {new Date(observation.date).toLocaleDateString()}
-                            </div>
-                          </div>
-
-                          <p className="text-gray-300 mb-4">
-                            {observation.description}
-                          </p>
-
-                          <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3 mb-3">
-                            <div className="flex items-start">
-                              <Award className="w-5 h-5 text-blue-400 mr-2 mt-0.5" />
-                              <div>
-                                <h4 className="text-blue-400 font-medium text-sm mb-1">
-                                  Scientific Significance
-                                </h4>
-                                <p className="text-gray-300 text-sm">
-                                  {observation.significance}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {observation.published && (
-                            <div className="flex justify-end">
-                              <a
-                                href="#"
-                                className="inline-flex items-center text-blue-400 hover:text-blue-300 text-sm"
-                              >
-                                View Publication Details
-                                <ExternalLink className="w-4 h-4 ml-1" />
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center text-gray-500 py-12">
-                  <Server className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No observations found for this instrument</p>
-                </div>
-              )}
-            </div>
+            <InstrumentObservations
+              instrumentId={id}
+              instrumentName={instrument.name}
+              instrumentType={instrument.type}
+            />
           )}
 
           {activeTab === "mission" && (
@@ -999,6 +1056,71 @@ const InstrumentDetails = () => {
                 <div className="text-center text-gray-500 py-12">
                   <Server className="w-12 h-12 mx-auto mb-4 opacity-50" />
                   <p>Mission details not available</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "news" && (
+            <div>
+              <h2 className="text-2xl font-light mb-8 pb-4 border-b border-gray-700/50">
+                Related News
+              </h2>
+
+              {relatedArticles.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {relatedArticles.map((article, index) => (
+                    <motion.a
+                      key={article.id}
+                      href={article.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      className="group bg-gray-900/50 rounded-lg overflow-hidden border border-gray-800/50 hover:border-blue-500/50 transition-all duration-300 flex flex-col"
+                    >
+                      <div className="relative h-48 overflow-hidden">
+                        <img
+                          src={article.image_url || "/api/placeholder/400/300"}
+                          alt={article.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          onError={(e) => {
+                            e.target.src = "/api/placeholder/400/300";
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent" />
+                        <div className="absolute bottom-4 left-4">
+                          <span className="text-xs text-gray-300">
+                            {new Date(
+                              article.published_at
+                            ).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="p-5 flex-1 flex flex-col">
+                        <h3 className="text-lg font-medium mb-2 group-hover:text-blue-400 transition-colors">
+                          {article.title}
+                        </h3>
+                        <p className="text-gray-400 text-sm mb-4 line-clamp-3 flex-1">
+                          {article.summary}
+                        </p>
+                        <div className="flex items-center justify-between mt-auto">
+                          <span className="text-xs text-gray-500">
+                            {article.news_site}
+                          </span>
+                          <span className="text-blue-400 text-sm flex items-center">
+                            Read more
+                            <ExternalLink className="w-3 h-3 ml-1" />
+                          </span>
+                        </div>
+                      </div>
+                    </motion.a>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <p>No related news articles found.</p>
                 </div>
               )}
             </div>
