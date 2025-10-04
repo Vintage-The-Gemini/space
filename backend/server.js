@@ -20,6 +20,20 @@ const nasaRoutes = require('./routes/nasaRoutes');
 app.use(express.json());
 app.use(cors());
 
+// Health check route
+app.get('/', (req, res) => {
+    res.json({
+        success: true,
+        message: 'Space Explorer API is running',
+        version: '1.0.0',
+        endpoints: {
+            instruments: '/api/instruments',
+            nasa: '/api/nasa',
+            websocket: 'ws://[host]'
+        }
+    });
+});
+
 // Routes
 app.use('/api/instruments', instrumentRoutes);
 app.use('/api/nasa', nasaRoutes);
