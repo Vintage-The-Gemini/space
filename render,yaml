@@ -1,7 +1,8 @@
 services:
-  - name: space-explorer-backend
+  - name: space-explorer-api
     type: web
     env: node
+    region: oregon
     buildCommand: cd backend && npm install
     startCommand: cd backend && node server.js
     envVars:
@@ -11,6 +12,8 @@ services:
         sync: false
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 10000
 
   - name: space-explorer-frontend
     type: static
@@ -18,4 +21,4 @@ services:
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
-        value: https://space-explorer-backend.onrender.com
+        value: https://space-explorer-api-nqm4.onrender.com

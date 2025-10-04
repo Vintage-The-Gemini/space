@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: space-explorer-api
+    env: node
+    region: oregon
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: NASA_API_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
